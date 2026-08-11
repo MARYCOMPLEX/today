@@ -81,6 +81,15 @@
       "month": 8,
       "day": 11,
       "leap_policy": "leap_first"
+    },
+    {
+      "id": "0bf1eb5f-ca3c-4c94-93e4-b67ef75fe3fd",
+      "name": "测试第二天推送",
+      "person": "测试推送",
+      "calendar": "solar",
+      "month": 8,
+      "day": 12,
+      "birth_year": 2000
     }
   ],
   "settings": {
