@@ -5,7 +5,7 @@
   "compatibility_date": "2026-07-18",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "PUBLIC_ORIGIN": "https://wx-clawbot-notify-webhook.goujy459.workers.dev",
+    "PUBLIC_ORIGIN": "https://today.gojia.cloud",
     "GITHUB_REPO": "MARYCOMPLEX/today"
   },
   "account_id": "810b967e7c471f41055789973fa72b9f",

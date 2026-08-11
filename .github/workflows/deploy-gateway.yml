@@ -30,7 +30,7 @@ jobs:
           cat > .dev.vars <<EOF
           BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
           MASTER_KEY=${{ secrets.MASTER_KEY }}
-          PUBLIC_ORIGIN=https://wx-clawbot-notify-webhook.goujy459.workers.dev
+          PUBLIC_ORIGIN=https://today.gojia.cloud
           ADMIN_EMAIL=admin@today.family
           ADMIN_PASSWORD=
           GITHUB_REPO=MARYCOMPLEX/today

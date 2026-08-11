@@ -97,7 +97,7 @@ CF 网关是多用户架构：**每个家人注册一个账号、绑定自己的
 ### Part A：部署 CF 网关（✅ 已完成 2026-08-11）
 
 网关已部署到你的 Cloudflare 账号（goujy459），资源：
-- **Worker**: `https://wx-clawbot-notify-webhook.goujy459.workers.dev`（/health ✅ /docs ✅）
+- **Worker**: `https://today.gojia.cloud`（/health ✅ /docs ✅）
 - **D1**: `wx-clawbot-notify-webhook`（APAC 区域，迁移已应用）
 - **R2**: `wx-clawbot-notify-webhook-images`（7 天清理规则已加）
 - **管理员邀请**：已写入 D1（30 天有效）
@@ -105,7 +105,7 @@ CF 网关是多用户架构：**每个家人注册一个账号、绑定自己的
 **👉 管理员注册链接**（现在就能打开，一次性使用，30 天有效）：
 
 ```
-https://wx-clawbot-notify-webhook.goujy459.workers.dev/register?invite=wxi_5d1a20480d5e4c33b7166041128545f4e63582506c575f8a
+https://today.gojia.cloud/register?invite=wxi_5d1a20480d5e4c33b7166041128545f4e63582506c575f8a
 ```
 
 注册后登录 `/dashboard`：

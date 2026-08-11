@@ -64,7 +64,7 @@ async function createTokenLink(ctx: CommandContext, kind: "add" | "delete"): Pro
     `INSERT INTO add_event_token (id, user_id, token_hash, kind, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`
   ).bind(crypto.randomUUID(), ctx.userId, tokenHash, kind, now + 15 * 60_000, now).run();
   await ctx.env.DB.prepare("DELETE FROM add_event_token WHERE user_id = ? AND expires_at <= ?").bind(ctx.userId, now).run();
-  const origin = ctx.env.PUBLIC_ORIGIN ?? "https://wx-clawbot-notify-webhook.goujy459.workers.dev";
+  const origin = ctx.env.PUBLIC_ORIGIN ?? "https://today.gojia.cloud";
   return `${origin}/${kind === "add" ? "add-event" : "manage-events"}?token=${encodeURIComponent(token)}`;
 }
 
@@ -172,7 +172,7 @@ export async function cmdStatus(ctx: CommandContext): Promise<void> {
 
 export async function cmdAdmin(ctx: CommandContext): Promise<void> {
   const user = await ctx.env.DB.prepare("SELECT email FROM user WHERE id = ?").bind(ctx.userId).first<{ email: string }>();
-  const origin = ctx.env.PUBLIC_ORIGIN ?? "https://wx-clawbot-notify-webhook.goujy459.workers.dev";
+  const origin = ctx.env.PUBLIC_ORIGIN ?? "https://today.gojia.cloud";
   await reply(ctx, [
     "🌐 管理后台：",
     `${origin}/dashboard`,
