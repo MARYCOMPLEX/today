@@ -54,6 +54,15 @@
       "day": 27,
       "leap_policy": "leap_first",
       "birth_year": 1970
+    },
+    {
+      "id": "e8e0a9b2-60c6-4d07-b824-e703fe2ba0aa",
+      "name": "删除链路测试",
+      "person": "测试",
+      "calendar": "solar",
+      "month": 12,
+      "day": 1,
+      "birth_year": 2000
     }
   ],
   "settings": {
