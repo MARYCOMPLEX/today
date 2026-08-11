@@ -1,0 +1,26 @@
+name: 诊断 Cloudflare Token
+
+on: workflow_dispatch
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 验证 Token
+        run: |
+          echo "=== 1. token 验证 ==="
+          curl -s -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | python3 -m json.tool || echo "FAIL"
+      - name: 列出账户
+        run: |
+          echo "=== 2. 账户列表 ==="
+          curl -s -X GET "https://api.cloudflare.com/client/v4/accounts" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | python3 -m json.tool || echo "FAIL"
+      - name: 测试 D1 权限
+        run: |
+          echo "=== 3. D1 数据库列表 ==="
+          curl -s -X GET "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/d1/database" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | python3 -m json.tool || echo "FAIL"
