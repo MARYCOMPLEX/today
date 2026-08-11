@@ -5,7 +5,7 @@ import { errorMessage, logEvent } from "./log";
 import { buildDigestChunks, queueRetryDecision, type QueuedNotification } from "./queue";
 import { registerUser, type RegistrationInput } from "./registration";
 import { isQuietHours } from "./time";
-import type { BindingRow, Env, IlinkResponse } from "./types";
+import type { BindingRow, Env, IlinkResponse, WeixinMessage } from "./types";
 
 interface BindingWithSettings extends BindingRow { quiet_start_minutes: number; quiet_end_minutes: number }
 interface SendInput { userId: string; text: string; idempotencyKey?: string; requestId: string }
@@ -190,14 +190,40 @@ export class Gateway {
     if (ownerMessage?.context_token) {
       const { sealJson } = await import("./crypto");
       const ciphertext = await sealJson({ token: ownerMessage.context_token }, this.env.MASTER_KEY, contextAad(row));
+      const wasActive = row.status === "active";
       await this.env.DB.prepare(`UPDATE wechat_binding SET cursor = ?, context_token_ciphertext = ?, status = 'active',
         context_updated_at = ?, last_poll_at = ?, last_error = NULL WHERE user_id = ? AND generation = ?`)
         .bind(response.get_updates_buf ?? row.cursor, ciphertext, now, now, row.user_id, row.generation).run();
+      if (!wasActive || this.messageIsInit(ownerMessage)) {
+        await this.sendActivationConfirmation(row, ownerMessage.context_token).catch((error) => {
+          logEvent("activation_confirmation_failed", { userId: row.user_id, error: errorMessage(error) });
+        });
+      }
     } else {
       await this.env.DB.prepare("UPDATE wechat_binding SET cursor = ?, last_poll_at = ?, last_error = NULL WHERE user_id = ? AND generation = ?")
         .bind(response.get_updates_buf ?? row.cursor, now, row.user_id, row.generation).run();
     }
     logEvent("poll_ok", { userId: row.user_id, generation: row.generation, messageCount: response.msgs?.length ?? 0, contextUpdated: Boolean(ownerMessage) });
+  }
+
+  private messageIsInit(message: WeixinMessage): boolean {
+    const text = message.item_list?.find((item) => item.type === 1)?.text_item?.text?.trim() ?? "";
+    return text === "init" || text === "初始化" || text === "激活";
+  }
+
+  private async sendActivationConfirmation(row: BindingWithSettings, contextToken: string): Promise<void> {
+    const { token } = await openJson<{ token: string }>(row.bot_token_ciphertext, this.env.MASTER_KEY, botAad(row));
+    const clientId = randomClientId();
+    const text = "✅ 微信通知网关已激活！\n绑定状态：active\n现在可以通过 API 推送通知到你的微信了。";
+    await sendTextMessage({
+      baseUrl: row.base_url,
+      token,
+      toUserId: row.owner_user_id,
+      contextToken,
+      clientId,
+      text,
+    });
+    logEvent("activation_confirmation_sent", { userId: row.user_id });
   }
 
   private async flush(row: BindingWithSettings): Promise<void> {

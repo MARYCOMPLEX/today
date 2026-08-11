@@ -73,11 +73,17 @@ export interface LoginStatusResponse {
   redirect_host?: string;
 }
 
+export interface WeixinMessageItem {
+  type?: number;
+  text_item?: { text?: string };
+}
+
 export interface WeixinMessage {
   message_id?: number;
   from_user_id?: string;
   context_token?: string;
   message_type?: number;
+  item_list?: WeixinMessageItem[];
 }
 
 export interface GetUpdatesResponse {
