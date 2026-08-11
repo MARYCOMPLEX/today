@@ -44,17 +44,6 @@
       "leap_day_policy": "feb28",
       "birth_year": 2020,
       "message": "🎂 $name（$person）生日，今年 $age 岁"
-    },
-    {
-      "id": "aa5e302f-d5cf-4aa1-8ba5-5a5ef5c47569",
-      "name": "端到端测试生日",
-      "person": "测试员",
-      "calendar": "lunar",
-      "month": 8,
-      "day": 16,
-      "leap_policy": "leap_first",
-      "birth_year": 1990,
-      "message": "🎂 测试"
     }
   ],
   "settings": {
