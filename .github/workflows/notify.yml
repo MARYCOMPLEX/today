@@ -48,15 +48,15 @@ jobs:
         if: inputs.send_test == true
         run: python scripts/notify.py --send-test --target filehelper --dry-run ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
-          CLAWBOT_BOT_A_API: ${{ secrets.CLAWBOT_BOT_A_API }}
-          CLAWBOT_BOT_A_TOKEN: ${{ secrets.CLAWBOT_BOT_A_TOKEN }}
+          CF_GATEWAY_KEY_DAD: ${{ secrets.CF_GATEWAY_KEY_DAD }}
+          CF_GATEWAY_KEY_MOM: ${{ secrets.CF_GATEWAY_KEY_MOM }}
 
       - name: 执行通知
         if: inputs.send_test != true
         run: python scripts/notify.py --run --slot "${{ inputs.slot }}" --dry-run ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
-          CLAWBOT_BOT_A_API: ${{ secrets.CLAWBOT_BOT_A_API }}
-          CLAWBOT_BOT_A_TOKEN: ${{ secrets.CLAWBOT_BOT_A_TOKEN }}
+          CF_GATEWAY_KEY_DAD: ${{ secrets.CF_GATEWAY_KEY_DAD }}
+          CF_GATEWAY_KEY_MOM: ${{ secrets.CF_GATEWAY_KEY_MOM }}
 
       - name: 提交状态（保活：每天有提交，cron 不暂停 + 去重持久化）
         uses: stefanzweifel/git-auto-commit-action@v5
