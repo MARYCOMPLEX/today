@@ -11,8 +11,9 @@ import { errorMessage, logEvent } from "./log";
 import { apiMarkdown, dashboardPage, loginPage, registerPage } from "./pages";
 import { passwordProblem, validChinaPhone } from "./password";
 import { createInvitation } from "./registration";
-import { addEventFormPage, addEventResultPage } from "./pages";
+import { addEventFormPage, addEventResultPage, manageEventsPage, manageEventsResultPage } from "./pages";
 import { addEventFromForm, claimAddToken, validateEventInput } from "./add-event";
+import { fetchEvents, removeEventsByIds } from "./github";
 import { isQuietHours, nextQuietEnd, timeToMinutes } from "./time";
 import type { BindingRow, Env, LoginSession, SessionUser } from "./types";
 
@@ -109,6 +110,50 @@ app.post("/api/add-event", async (c) => {
     body: JSON.stringify({ userId: claim.userId, idempotencyKey: `add-event:${token}`, requestId: c.get("requestId"), text: confirmText }),
   }).catch(() => {});
   return c.html(addEventResultPage({ ok: true, message: confirmText, link: "https://github.com/MARYCOMPLEX/today/blob/main/data/events.json" }));
+});
+
+app.get("/manage-events", async (c) => {
+  const token = c.req.query("token") ?? "";
+  const claim = await claimAddToken(c.env, token, false, "delete");
+  if (!claim.ok) return c.html(manageEventsResultPage({ ok: false, message: claim.error }));
+  try {
+    const data = await fetchEvents(c.env);
+    const events = (data.events ?? []).map((e) => ({
+      id: String(e.id ?? ""), name: String(e.name ?? ""), person: String(e.person ?? ""),
+      calendar: e.calendar === "solar" ? "solar" : "lunar",
+      month: Number(e.month ?? 0), day: Number(e.day ?? 0),
+    })).filter((e) => e.id);
+    return c.html(manageEventsPage({ token, events }));
+  } catch (error) {
+    return c.html(manageEventsResultPage({ ok: false, message: `读取日历失败：${errorMessage(error)}。请稍后重试。` }));
+  }
+});
+
+app.post("/api/manage-events", async (c) => {
+  const body = await c.req.parseBody().catch(() => ({})) as Record<string, unknown>;
+  const token = String(body.token ?? "");
+  const claim = await claimAddToken(c.env, token, true, "delete");
+  if (!claim.ok) return c.html(manageEventsResultPage({ ok: false, message: claim.error }));
+  const rawIds = body.ids;
+  const ids = (Array.isArray(rawIds) ? rawIds : rawIds ? [rawIds] : []).map(String).filter(Boolean);
+  if (!ids.length) {
+    return c.html(manageEventsResultPage({ ok: false, message: "没有勾选任何事件，未做修改。" }));
+  }
+  try {
+    const removed = await removeEventsByIds(c.env, ids);
+    const message = removed === 0
+      ? "未找到选中的事件（可能已被删除），未做修改。"
+      : `✅ 已删除 ${removed} 条事件，日历已更新。`;
+    logEvent("manage_events_deleted", { requestId: c.get("requestId"), userId: claim.userId, removed, requested: ids.length });
+    gatewayStub(c.env).fetch(gatewayUrl("/notify"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Request-Id": c.get("requestId") },
+      body: JSON.stringify({ userId: claim.userId, idempotencyKey: `manage-events:${token}`, requestId: c.get("requestId"), text: `🗑️ ${message}` }),
+    }).catch(() => {});
+    return c.html(manageEventsResultPage({ ok: removed > 0, message }));
+  } catch (error) {
+    return c.html(manageEventsResultPage({ ok: false, message: `删除失败：${errorMessage(error)}。请稍后重试。` }));
+  }
 });
 
 app.get("/dashboard", async (c) => {

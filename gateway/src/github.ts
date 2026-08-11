@@ -18,6 +18,22 @@ async function gh<T>(env: Env, method: string, path: string, body?: unknown): Pr
 
 interface GhContent { sha: string; content: string }
 
+const eventsCache = new Map<string, { at: number; data: unknown }>();
+const EVENTS_CACHE_TTL_MS = 60_000;
+
+export async function fetchEvents(env: Env): Promise<{ events: Record<string, unknown>[] }> {
+  const repo = env.GITHUB_REPO ?? "MARYCOMPLEX/today";
+  const cached = eventsCache.get(repo);
+  if (cached && Date.now() - cached.at < EVENTS_CACHE_TTL_MS) return cached.data as { events: Record<string, unknown>[] };
+  const r = await fetch(`https://raw.githubusercontent.com/${repo}/main/data/events.json`, {
+    headers: env.GITHUB_TOKEN ? { Authorization: `Bearer ${env.GITHUB_TOKEN}` } : {},
+  });
+  if (!r.ok) throw new Error(`fetch events.json -> ${r.status}`);
+  const data = await r.json() as { events: Record<string, unknown>[] };
+  eventsCache.set(repo, { at: Date.now(), data });
+  return data;
+}
+
 export async function appendEvent(env: Env, event: Record<string, unknown>): Promise<void> {
   const data = await gh<GhContent>(env, "GET", "/contents/data/events.json");
   const full = JSON.parse(Buffer.from(data.content, "base64").toString("utf-8"));
@@ -31,4 +47,24 @@ export async function appendEvent(env: Env, event: Record<string, unknown>): Pro
     content: Buffer.from(JSON.stringify(full, null, 2) + "\n").toString("base64"),
     sha: data.sha,
   });
+}
+
+export async function removeEventsByIds(env: Env, ids: string[]): Promise<number> {
+  if (!ids.length) return 0;
+  const data = await gh<GhContent>(env, "GET", "/contents/data/events.json");
+  const full = JSON.parse(Buffer.from(data.content, "base64").toString("utf-8"));
+  const events: Record<string, unknown>[] = full.events ?? [];
+  const before = events.length;
+  const idSet = new Set(ids);
+  const kept = events.filter((e) => !idSet.has(String(e.id)));
+  const removed = before - kept.length;
+  if (removed === 0) return 0;
+  full.events = kept;
+  await gh(env, "PUT", "/contents/data/events.json", {
+    message: `chore: remove ${removed} event(s) from wechat form`,
+    content: Buffer.from(JSON.stringify(full, null, 2) + "\n").toString("base64"),
+    sha: data.sha,
+  });
+  eventsCache.delete(env.GITHUB_REPO ?? "MARYCOMPLEX/today");
+  return removed;
 }

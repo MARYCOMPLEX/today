@@ -19,20 +19,21 @@ export interface NewEventInput {
 
 type ClaimResult = { ok: true; userId: string } | { ok: false; error: string };
 
-export async function claimAddToken(env: Env, token: string, consume: boolean): Promise<ClaimResult> {
-  if (!token) return { ok: false, error: "缺少 token 参数，请在微信发送「添加日期」获取链接。" };
+export async function claimAddToken(env: Env, token: string, consume: boolean, kind: "add" | "delete" = "add"): Promise<ClaimResult> {
+  if (!token) return { ok: false, error: "缺少 token 参数，请在微信发送相应命令获取链接。" };
   const tokenHash = await sha256Hex(token);
   const row = await env.DB.prepare(
-    "SELECT user_id, expires_at, consumed_at FROM add_event_token WHERE token_hash = ?"
-  ).bind(tokenHash).first<{ user_id: string; expires_at: number; consumed_at: number | null }>();
-  if (!row) return { ok: false, error: "链接无效，请重新在微信发送「添加日期」。" };
-  if (row.consumed_at !== null) return { ok: false, error: "该链接已被使用过，请重新在微信发送「添加日期」。" };
-  if (row.expires_at <= Date.now()) return { ok: false, error: "链接已过期，请重新在微信发送「添加日期」。" };
+    "SELECT user_id, expires_at, consumed_at, kind FROM add_event_token WHERE token_hash = ?"
+  ).bind(tokenHash).first<{ user_id: string; expires_at: number; consumed_at: number | null; kind: string }>();
+  if (!row) return { ok: false, error: "链接无效，请重新在微信发送相应命令。" };
+  if (row.kind !== kind) return { ok: false, error: "链接类型不匹配，请重新在微信发送相应命令。" };
+  if (row.consumed_at !== null) return { ok: false, error: "该链接已被使用过，请重新在微信发送相应命令。" };
+  if (row.expires_at <= Date.now()) return { ok: false, error: "链接已过期，请重新在微信发送相应命令。" };
   if (consume) {
     const result = await env.DB.prepare(
       "UPDATE add_event_token SET consumed_at = ? WHERE token_hash = ? AND consumed_at IS NULL"
     ).bind(Date.now(), tokenHash).run();
-    if (result.meta.changes !== 1) return { ok: false, error: "该链接已被使用过，请重新在微信发送「添加日期」。" };
+    if (result.meta.changes !== 1) return { ok: false, error: "该链接已被使用过，请重新在微信发送相应命令。" };
   }
   return { ok: true, userId: row.user_id };
 }

@@ -221,3 +221,45 @@ export function addEventResultPage(props: { ok: boolean; message: string; link?:
     <p class="muted" style="margin-top:12px">每天 7:30 / 12:30 / 19:30 三个时段推送当天及未来 5 天内的家庭日期到微信。</p>
   </section></main></Layout>;
 }
+
+// ---------- 删除日期管理页 ----------
+
+export interface ManageEventRow {
+  id: string;
+  name: string;
+  person: string;
+  calendar: string;
+  month: number;
+  day: number;
+}
+
+export function manageEventsPage(props: { token: string; events: ManageEventRow[] }) {
+  if (!props.events.length) {
+    return <Layout title="删除日期 - 家庭日历"><main class="auth"><section class="card">
+      <h1>🗑️ 删除日期</h1>
+      <div class="status ok">当前日历没有可删除的事件。</div>
+    </section></main></Layout>;
+  }
+  return <Layout title="删除日期 - 家庭日历"><main class="auth"><section class="card">
+    <h1>🗑️ 删除日期</h1>
+    <p class="muted">勾选要删除的事件后提交（<b>不可撤销</b>）。链接一次性有效，15 分钟过期。</p>
+    <form action="/api/manage-events" method="post">
+      <input type="hidden" name="token" value={props.token}/>
+      {props.events.map((ev) => (
+        <label style="display:flex;gap:10px;align-items:center;font-weight:500;margin:10px 0;padding:10px;border:1px solid #dbe2ee;border-radius:8px;background:#fafcff">
+          <input type="checkbox" name="ids" value={ev.id} style="width:auto"/>
+          <span>{ev.calendar === "lunar" ? "🌙" : "☀️"} {ev.name}（{ev.person}）{ev.calendar === "lunar" ? "农历" : "阳历"} {ev.month}月{ev.day}日</span>
+        </label>
+      ))}
+      <button type="submit" class="danger" style="margin-top:16px;width:100%">删除选中事件</button>
+    </form>
+  </section></main></Layout>;
+}
+
+export function manageEventsResultPage(props: { ok: boolean; message: string }) {
+  return <Layout title="删除结果 - 家庭日历"><main class="auth"><section class="card">
+    <h1>{props.ok ? "✅ 操作成功" : "❌ 操作失败"}</h1>
+    <div class={props.ok ? "status ok" : "status error"}>{props.message}</div>
+    <p class="muted" style="margin-top:12px">数据已同步到 GitHub，下次推送（每天 7:30 / 12:30 / 19:30）将按新列表播报。</p>
+  </section></main></Layout>;
+}
