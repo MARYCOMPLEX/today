@@ -19,8 +19,11 @@ vi.mock("../src/github", () => ({
 
 import { handleCommand, type CommandContext } from "../src/wechat-commands";
 
+const dbMock = {
+  prepare: () => ({ bind: () => ({ first: async () => ({ email: "admin@test.com", status: "active", last_poll_at: null, last_error: null, quiet_start_minutes: 0, quiet_end_minutes: 420 }) }) }),
+};
 const ctx: CommandContext = {
-  env: { DB: {} as never } as unknown as Env,
+  env: { DB: dbMock as never, PUBLIC_ORIGIN: "https://gw.example.com" } as unknown as Env,
   userId: "u1", baseUrl: "https://example.com", botToken: "tok", toUserId: "self", contextToken: "c1",
 };
 
@@ -57,6 +60,15 @@ describe("wechat commands", () => {
     const ok = await handleCommand(ctx, "测试");
     expect(ok).toBe(true);
     expect(sent[0]).toContain("命令链路正常");
+  });
+
+  it("后台命令返回入口与账号", async () => {
+    sent.length = 0;
+    const ok = await handleCommand(ctx, "后台");
+    expect(ok).toBe(true);
+    const text = sent.join("\n");
+    expect(text).toContain("https://gw.example.com/dashboard");
+    expect(text).toContain("admin@test.com");
   });
 
   it("未知命令不处理", async () => {

@@ -170,6 +170,20 @@ export async function cmdStatus(ctx: CommandContext): Promise<void> {
   ].filter(Boolean));
 }
 
+export async function cmdAdmin(ctx: CommandContext): Promise<void> {
+  const user = await ctx.env.DB.prepare("SELECT email FROM user WHERE id = ?").bind(ctx.userId).first<{ email: string }>();
+  const origin = ctx.env.PUBLIC_ORIGIN ?? "https://wx-clawbot-notify-webhook.goujy459.workers.dev";
+  await reply(ctx, [
+    "🌐 管理后台：",
+    `${origin}/dashboard`,
+    "",
+    `👤 登录账号：${user?.email ?? "（未找到账号）"}`,
+    "🔑 密码：注册时设置的密码（登录后可自行修改）",
+    "",
+    "后台可查看：API Key、微信绑定状态、通知/静默时段、创建邀请码。",
+  ]);
+}
+
 export async function cmdHelp(ctx: CommandContext): Promise<void> {
   await reply(ctx, [
     "🤖 可用命令：",
@@ -181,6 +195,7 @@ export async function cmdHelp(ctx: CommandContext): Promise<void> {
     "最近 — 查看未来 5 天（含今天）的事件",
     "测试 — 发送一条测试消息",
     "状态 — 查看绑定、推送与静默时段",
+    "后台 — 获取管理后台入口与登录账号",
     "帮助 — 显示本说明",
   ]);
 }
@@ -193,6 +208,7 @@ const COMMAND_TABLE: { keys: string[]; handler: (ctx: CommandContext) => Promise
   { keys: ["最近", "近期", "upcoming", "soon", "future"], handler: cmdUpcoming },
   { keys: ["测试", "test", "ping"], handler: cmdTest },
   { keys: ["状态", "status"], handler: cmdStatus },
+  { keys: ["后台", "管理后台", "admin", "dashboard", "面板"], handler: cmdAdmin },
   { keys: ["帮助", "help", "命令", "commands", "菜单"], handler: cmdHelp },
 ];
 
