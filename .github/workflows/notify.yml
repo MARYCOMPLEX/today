@@ -46,14 +46,14 @@ jobs:
 
       - name: 发送测试
         if: inputs.send_test == true
-        run: python scripts/notify.py --send-test --target filehelper --dry-run ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: python scripts/notify.py --send-test --target filehelper ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
           CF_GATEWAY_KEY_DAD: ${{ secrets.CF_GATEWAY_KEY_DAD }}
           CF_GATEWAY_KEY_MOM: ${{ secrets.CF_GATEWAY_KEY_MOM }}
 
       - name: 执行通知
         if: inputs.send_test != true
-        run: python scripts/notify.py --run --slot "${{ inputs.slot }}" --dry-run ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: python scripts/notify.py --run --slot "${{ inputs.slot }}" ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
           CF_GATEWAY_KEY_DAD: ${{ secrets.CF_GATEWAY_KEY_DAD }}
           CF_GATEWAY_KEY_MOM: ${{ secrets.CF_GATEWAY_KEY_MOM }}
