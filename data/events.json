@@ -54,6 +54,15 @@
       "day": 27,
       "leap_policy": "leap_first",
       "birth_year": 1970
+    },
+    {
+      "id": "edc8b186-479a-406e-9fb2-ef0c9a7f4c5c",
+      "name": "g子生日",
+      "person": "xiug",
+      "calendar": "solar",
+      "month": 8,
+      "day": 1,
+      "birth_year": 2000
     }
   ],
   "settings": {
