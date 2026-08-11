@@ -1,0 +1,65 @@
+name: 家庭日历通知
+
+on:
+  schedule:
+    - cron: "5 16 * * *"   # 00:05 北京时间（当天 + 提前提醒）
+    - cron: "30 0 * * *"   # 08:30 北京时间（今天汇总）
+    - cron: "30 12 * * *"  # 20:30 北京时间（明天预告）
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 时段
+        type: choice
+        options: ["00:05", "08:30", "20:30"]
+        default: "08:30"
+      send_test:
+        description: 发送测试消息到文件传输助手
+        type: boolean
+        default: false
+      dry_run:
+        description: 仅预览不发送
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: notify
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 校验数据
+        run: python scripts/validate.py
+
+      - name: 发送测试
+        if: inputs.send_test == true
+        run: python scripts/notify.py --send-test --target filehelper --dry-run ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          CLAWBOT_BOT_A_API: ${{ secrets.CLAWBOT_BOT_A_API }}
+          CLAWBOT_BOT_A_TOKEN: ${{ secrets.CLAWBOT_BOT_A_TOKEN }}
+
+      - name: 执行通知
+        if: inputs.send_test != true
+        run: python scripts/notify.py --run --slot "${{ inputs.slot }}" --dry-run ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          CLAWBOT_BOT_A_API: ${{ secrets.CLAWBOT_BOT_A_API }}
+          CLAWBOT_BOT_A_TOKEN: ${{ secrets.CLAWBOT_BOT_A_TOKEN }}
+
+      - name: 提交状态（保活：每天有提交，cron 不暂停 + 去重持久化）
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update notification state [skip ci]"
+          file_pattern: ".state/"

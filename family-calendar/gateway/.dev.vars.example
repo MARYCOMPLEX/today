@@ -1,0 +1,5 @@
+BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters
+MASTER_KEY=replace-with-32-random-bytes-in-base64
+PUBLIC_ORIGIN=https://your-domain.example
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=

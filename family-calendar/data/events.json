@@ -1,0 +1,111 @@
+{
+  "events": [
+    {
+      "id": "mom-birthday",
+      "name": "妈妈生日",
+      "person": "妈妈",
+      "calendar": "lunar",
+      "month": 8,
+      "day": 15,
+      "leap_policy": "leap_first",
+      "birth_year": 1962,
+      "targets": [
+        "bot-a:filehelper"
+      ],
+      "message": "🎂 $name（$person）农历生日，今年 $age 岁，记得打电话"
+    },
+    {
+      "id": "dad-birthday",
+      "name": "爸爸生日",
+      "person": "爸爸",
+      "calendar": "lunar",
+      "month": 9,
+      "day": 2,
+      "birth_year": 1960,
+      "message": "🎂 $name（$person）农历生日，今年 $age 岁"
+    },
+    {
+      "id": "anniv-wedding",
+      "name": "结婚纪念日",
+      "person": "爸妈",
+      "calendar": "solar",
+      "month": 10,
+      "day": 1,
+      "birth_year": 1988,
+      "message": "💍 $name $person，今年第 $age 年"
+    },
+    {
+      "id": "kid-birthday",
+      "name": "孩子生日",
+      "person": "宝宝",
+      "calendar": "solar",
+      "month": 2,
+      "day": 29,
+      "leap_day_policy": "feb28",
+      "birth_year": 2020,
+      "message": "🎂 $name（$person）生日，今年 $age 岁"
+    }
+  ],
+  "settings": {
+    "timezone": "Asia/Shanghai",
+    "default_bot": "dad",
+    "bots": [
+      {
+        "id": "dad",
+        "mode": "cf",
+        "api": "https://wx-clawbot-notify-webhook.goujy459.workers.dev",
+        "token": "${CF_GATEWAY_KEY_DAD}",
+        "default_targets": [
+          "self"
+        ]
+      },
+      {
+        "id": "mom",
+        "mode": "cf",
+        "api": "https://wx-clawbot-notify-webhook.goujy459.workers.dev",
+        "token": "${CF_GATEWAY_KEY_MOM}",
+        "default_targets": [
+          "self"
+        ]
+      }
+    ],
+    "default_targets": [
+      "self"
+    ],
+    "notify_slots": {
+      "00:05": {
+        "remind": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "desc": "凌晨：当天 + 未来 5 天播报"
+      },
+      "08:30": {
+        "remind": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "desc": "早间：当天 + 未来 5 天播报"
+      },
+      "20:30": {
+        "remind": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "desc": "晚间：当天 + 未来 5 天播报"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "wx-clawbot-notify-webhook",
+  "version": "0.1.0",
+  "description": "Multi-user WeChat iLink notification gateway for Cloudflare Workers",
+  "license": "MIT",
+  "repository": "https://github.com/frankie0736/wx-clawbot-notify-webhook",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.12",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply wx-clawbot-notify-webhook --local",
+    "db:migrate:remote": "wrangler d1 migrations apply wx-clawbot-notify-webhook --remote",
+    "bootstrap:admin": "bun run scripts/bootstrap-admin.ts",
+    "smoke:local": "bun run scripts/local-auth-smoke.ts",
+    "smoke:production": "bun run scripts/production-admin-smoke.ts",
+    "secrets:push": "bun run scripts/push-runtime-secrets.ts",
+    "bootstrap:register-admin": "bun run scripts/register-bootstrap-admin.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "bun run typecheck && bun run test",
+    "cf:dry-run": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "better-auth": "1.6.23",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.30",
+    "uqr": "^0.1.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260718.1",
+    "@types/bun": "^1.3.14",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.112.0"
+  }
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>家庭日历</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", sans-serif; max-width: 720px; margin: 0 auto; padding: 16px; background: #fafafa; color: #222; }
+  h1 { font-size: 22px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+  th { background: #f0f4ff; }
+  .note { color: #e5484d; font-weight: 600; }
+  .add { display: block; margin: 20px 0; padding: 12px; text-align: center; background: #2f6fed; color: #fff; border-radius: 8px; text-decoration: none; font-size: 15px; }
+  .tip { color: #888; font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h1>📅 家庭日历</h1>
+<p class="tip">更新于 {{GENERATED}}（每天随通知任务自动刷新）</p>
+<table>
+  <tr><th>名称</th><th>谁</th><th>历法</th><th>月日</th><th>最近一次</th><th>倒计时</th></tr>
+  <!--ROWS-->
+</table>
+<a class="add" href="#" onclick="openAdd(event)">➕ 添加 / 更新条目</a>
+<p class="tip">点上面按钮会用当前页面信息打开一个 GitHub Issue，正文里贴 JSON 即可（示例见下）。带「event」标签的 issue 会被自动导入。也可以直接在仓库 data/events.json 里改。</p>
+<pre id="sample" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:12px;overflow-x:auto"></pre>
+<script>
+  const sample = {
+    "id": "new-event",
+    "name": "新事件",
+    "person": "谁",
+    "calendar": "lunar",
+    "month": 8,
+    "day": 15,
+    "leap_policy": "leap_first",
+    "birth_year": 1990,
+    "remind_days": [7, 3, 1, 0],
+    "message": "🎂 $name（$person）农历生日，今年 $age 岁"
+  };
+  document.getElementById('sample').textContent = JSON.stringify(sample, null, 2);
+  function openAdd(ev) {
+    ev.preventDefault();
+    const url = `https://github.com/${'REPO_PLACEHOLDER'}/issues/new?title=${encodeURIComponent('[event] 添加条目')}&body=${encodeURIComponent('```json\n' + JSON.stringify(sample, null, 2) + '\n```')}`;
+    window.open(url, '_blank');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+name: 部署微信网关
+
+on:
+  push:
+    branches: [main]
+    paths: ["gateway/**"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gateway
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: 安装依赖
+        run: bun install --frozen-lockfile
+
+      - name: 类型检查
+        run: bun run typecheck
+
+      - name: 生成 .dev.vars
+        run: |
+          cat > .dev.vars <<EOF
+          BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
+          MASTER_KEY=${{ secrets.MASTER_KEY }}
+          PUBLIC_ORIGIN=https://wx-clawbot-notify-webhook.goujy459.workers.dev
+          ADMIN_EMAIL=admin@today.family
+          ADMIN_PASSWORD=
+          EOF
+
+      - name: 数据库迁移
+        run: bun run db:migrate:remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: 推送运行时 Secrets
+        run: bun run secrets:push
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: 部署 Worker
+        run: bun run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
