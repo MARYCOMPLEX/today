@@ -72,6 +72,15 @@
       "month": 8,
       "day": 11,
       "birth_year": 2000
+    },
+    {
+      "id": "9dd495ae-2a7b-4e69-9ccc-d48969f9bc04",
+      "name": "gg拉屎日",
+      "person": "gh",
+      "calendar": "lunar",
+      "month": 8,
+      "day": 11,
+      "leap_policy": "leap_first"
     }
   ],
   "settings": {
