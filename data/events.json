@@ -63,6 +63,15 @@
       "month": 8,
       "day": 1,
       "birth_year": 2000
+    },
+    {
+      "id": "2100b370-34f0-4973-ab05-ba27714db1a4",
+      "name": "测试生日",
+      "person": "测试",
+      "calendar": "solar",
+      "month": 8,
+      "day": 11,
+      "birth_year": 2000
     }
   ],
   "settings": {
