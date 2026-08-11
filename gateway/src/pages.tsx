@@ -10,7 +10,8 @@ const CSS = `
 header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.brand{font-size:20px;font-weight:800}.muted{color:#65728a;font-size:14px;line-height:1.55}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}.card{background:#fff;border:1px solid #dbe2ee;border-radius:14px;padding:20px;box-shadow:0 10px 30px #1b2a450a}
 .auth{width:min(440px,100%);margin:8vh auto}.auth .card{padding:28px}h1{font-size:26px;margin:0 0 8px}h2{font-size:17px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
-input,textarea,button{font:inherit;border-radius:8px}input,textarea{width:100%;padding:10px 11px;border:1px solid #b9c5d7;background:#fff}textarea{min-height:180px;resize:vertical}button{border:0;padding:10px 14px;background:#1769e0;color:#fff;font-weight:700;cursor:pointer}.secondary{background:#5a6577}.danger{background:#b83333}.row{display:flex;gap:9px;align-items:end}.row>*{flex:1}.row button{flex:0 0 auto}
+input,textarea,select,button{font:inherit;border-radius:8px}
+select{width:100%;padding:10px 11px;border:1px solid #b9c5d7;background:#fff}input,textarea{width:100%;padding:10px 11px;border:1px solid #b9c5d7;background:#fff}textarea{min-height:180px;resize:vertical}button{border:0;padding:10px 14px;background:#1769e0;color:#fff;font-weight:700;cursor:pointer}.secondary{background:#5a6577}.danger{background:#b83333}.row{display:flex;gap:9px;align-items:end}.row>*{flex:1}.row button{flex:0 0 auto}
 .status{margin:12px 0 0;padding:10px;border-radius:8px;background:#eef4ff;white-space:pre-wrap;font-size:14px}.error{background:#fff0f0;color:#a12b2b}.ok{background:#e8f7ed;color:#176a35}.key{font-family:ui-monospace,SFMono-Regular,monospace}.hidden{display:none}#qr svg{width:min(280px,100%);height:auto;margin:12px auto;display:block}nav{display:flex;gap:10px;align-items:center}.pill{padding:5px 9px;border-radius:999px;background:#e9eef6;font-size:12px}code{background:#edf1f7;padding:2px 5px;border-radius:4px}
 .site-footer{padding:18px 20px 24px;text-align:center}.github-link{display:inline-flex;color:#65728a;transition:color .15s ease}.github-link:hover{color:#172033}.github-link svg{width:24px;height:24px;fill:currentColor}
 `;
@@ -142,4 +143,81 @@ export function dashboardPage(props: DashboardProps) {
       <section class="card" style="grid-column:1/-1"><h2>API 文档</h2><p class="muted">Base URL 按当前 Host 自动生成。</p><textarea id="apiDocs" class="key" readonly>{docs}</textarea><button id="copyDocs">复制 Markdown</button></section>
       {props.role === "admin" ? <section class="card"><h2>管理员：创建邀请码</h2><label>限制邮箱（可选）</label><input id="inviteEmail" type="email" autocomplete="off"/><button id="createInvite">创建 7 天有效邀请码</button><label>注册链接</label><div class="row"><input id="inviteResult" readonly autocomplete="off"/><button onclick={html`navigator.clipboard.writeText(document.querySelector('#inviteResult').value)`}>复制</button></div><div id="inviteStatus" class="status hidden"></div></section> : null}
     </div></main></Layout>;
+}
+
+// ---------- 添加日期表单 ----------
+
+export interface AddEventFormValues {
+  name: string;
+  person: string;
+  calendar: string;
+  month: string;
+  day: string;
+  leap_policy: string;
+  leap_day_policy: string;
+  birth_year: string;
+  message: string;
+}
+
+const DEFAULT_ADD_VALUES: AddEventFormValues = {
+  name: "", person: "", calendar: "lunar", month: "", day: "",
+  leap_policy: "leap_first", leap_day_policy: "feb28", birth_year: "", message: "",
+};
+
+const addEventScript = `
+const cal=document.querySelectorAll('input[name=calendar]');
+function syncLeap(){const lunar=[...cal].find(r=>r.checked).value==='lunar';document.querySelector('#leapWrap').style.display=lunar?'block':'none';}
+if(cal.length){cal.forEach(r=>r.onchange=syncLeap);syncLeap();}`;
+
+export function addEventFormPage(props: { token: string; error?: string; values?: Partial<AddEventFormValues> }) {
+  const v = { ...DEFAULT_ADD_VALUES, ...(props.values ?? {}) };
+  const errorBlock = props.error ? <div class="status error" style="margin-top:14px">{props.error}（重新在微信发送「添加日期」可获取新链接）</div> : null;
+  return <Layout title="添加日期 - 家庭日历" script={addEventScript}><main class="auth"><section class="card">
+    <h1>添加日期</h1>
+    <p class="muted">通过微信「添加日期」链接进入。提交后自动写入家庭日历，每天三个时段（含未来 5 天）推送到微信。</p>
+    {errorBlock}
+    <form action="/api/add-event" method="post">
+      <input type="hidden" name="token" value={props.token}/>
+      <label>事件名称</label>
+      <input name="name" value={v.name} placeholder="如：妈妈生日" required/>
+      <label>人物</label>
+      <input name="person" value={v.person} placeholder="如：妈妈" required/>
+      <label>历法（只选一个）</label>
+      <div class="row" style="display:flex;gap:14px;align-items:center">
+        <label style="margin:0;font-weight:500"><input type="radio" name="calendar" value="lunar" checked={v.calendar !== "solar"}/> 农历</label>
+        <label style="margin:0;font-weight:500"><input type="radio" name="calendar" value="solar" checked={v.calendar === "solar"}/> 阳历</label>
+      </div>
+      <div class="row">
+        <div><label>月</label><input name="month" type="number" min="1" max="12" value={v.month} placeholder="8" required/></div>
+        <div><label>日</label><input name="day" type="number" min="1" max="31" value={v.day} placeholder="15" required/></div>
+      </div>
+      <div id="leapWrap"><label>闰月策略（农历）</label>
+        <select name="leap_policy">
+          <option value="leap_first" selected={v.leap_policy === "leap_first"}>当年有闰该月则过闰月，否则正月（推荐）</option>
+          <option value="leap_both" selected={v.leap_policy === "leap_both"}>闰月优先，已过则正月</option>
+          <option value="normal" selected={v.leap_policy === "normal"}>永远按正月过</option>
+        </select>
+      </div>
+      <label>2 月 29 日不存在时（阳历 2/29 适用）</label>
+      <select name="leap_day_policy">
+        <option value="feb28" selected={v.leap_day_policy !== "mar1"}>提前到 2 月 28 日（推荐）</option>
+        <option value="mar1" selected={v.leap_day_policy === "mar1"}>顺延到 3 月 1 日</option>
+      </select>
+      <label>出生年份（可选，用于播报岁数）</label>
+      <input name="birth_year" type="number" min="1900" max="2100" value={v.birth_year} placeholder="如：1962"/>
+      <label>消息模板（可选，支持 $name $person $age）</label>
+      <input name="message" value={v.message} placeholder="如：🎂 $name（$person）农历生日，今年 $age 岁，记得打电话"/>
+      <button type="submit" style="margin-top:18px;width:100%">提交</button>
+    </form>
+    <p class="muted" style="margin-top:12px">不需要登录，链接一次性有效，15 分钟后自动失效。</p>
+  </section></main></Layout>;
+}
+
+export function addEventResultPage(props: { ok: boolean; message: string; link?: string }) {
+  return <Layout title="提交结果 - 家庭日历"><main class="auth"><section class="card">
+    <h1>{props.ok ? "✅ 提交成功" : "❌ 提交失败"}</h1>
+    <div class={props.ok ? "status ok" : "status error"}>{props.message}</div>
+    {props.link ? <p class="muted" style="margin-top:12px">查看/管理事件：<a href={props.link} target="_blank" rel="noreferrer">GitHub 日历数据</a></p> : null}
+    <p class="muted" style="margin-top:12px">每天 7:30 / 12:30 / 19:30 三个时段推送当天及未来 5 天内的家庭日期到微信。</p>
+  </section></main></Layout>;
 }

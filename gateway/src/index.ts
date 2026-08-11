@@ -11,6 +11,8 @@ import { errorMessage, logEvent } from "./log";
 import { apiMarkdown, dashboardPage, loginPage, registerPage } from "./pages";
 import { passwordProblem, validChinaPhone } from "./password";
 import { createInvitation } from "./registration";
+import { addEventFormPage, addEventResultPage } from "./pages";
+import { addEventFromForm, claimAddToken, validateEventInput } from "./add-event";
 import { isQuietHours, nextQuietEnd, timeToMinutes } from "./time";
 import type { BindingRow, Env, LoginSession, SessionUser } from "./types";
 
@@ -66,6 +68,48 @@ app.post("/api/register", async (c) => {
 app.all("/api/auth/sign-up/email", (c) => c.json({ error: "invite_required" }, 404));
 app.all("/api/auth/change-password", (c) => c.json({ error: "use_/api/password" }, 404));
 app.all("/api/auth/*", (c) => createAuth(c.env, originOf(c.req.url)).handler(c.req.raw));
+
+app.get("/add-event", async (c) => {
+  const token = c.req.query("token") ?? "";
+  const claim = await claimAddToken(c.env, token, false);
+  if (!claim.ok) return c.html(addEventResultPage({ ok: false, message: claim.error }));
+  return c.html(addEventFormPage({ token }));
+});
+
+app.post("/api/add-event", async (c) => {
+  const body = await c.req.parseBody().catch(() => ({})) as Record<string, unknown>;
+  const token = String(body.token ?? "");
+  const claim = await claimAddToken(c.env, token, true);
+  if (!claim.ok) return c.html(addEventResultPage({ ok: false, message: claim.error }));
+  const validated = validateEventInput(body);
+  if (!validated.ok) {
+    return c.html(addEventFormPage({
+      token,
+      error: validated.error,
+      values: {
+        name: String(body.name ?? ""), person: String(body.person ?? ""),
+        calendar: String(body.calendar ?? "lunar"), month: String(body.month ?? ""), day: String(body.day ?? ""),
+        leap_policy: String(body.leap_policy ?? "leap_first"), leap_day_policy: String(body.leap_day_policy ?? "feb28"),
+        birth_year: String(body.birth_year ?? ""), message: String(body.message ?? ""),
+      },
+    }));
+  }
+  try {
+    await addEventFromForm(c.env, validated.value);
+  } catch (error) {
+    const message = errorMessage(error);
+    logEvent("add_event_write_failed", { requestId: c.get("requestId"), userId: claim.userId, error: message });
+    return c.html(addEventResultPage({ ok: false, message: `写入失败：${message}。请稍后重试或联系管理员。` }));
+  }
+  logEvent("add_event_created", { requestId: c.get("requestId"), userId: claim.userId, name: validated.value.name });
+  const confirmText = `✅ 已添加：${validated.value.name}（${validated.value.person}，${validated.value.calendar === "lunar" ? "农历" : "阳历"} ${validated.value.month}月${validated.value.day}日）。将在每天三个时段播报。`;
+  gatewayStub(c.env).fetch(gatewayUrl("/notify"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Request-Id": c.get("requestId") },
+    body: JSON.stringify({ userId: claim.userId, idempotencyKey: `add-event:${token}`, requestId: c.get("requestId"), text: confirmText }),
+  }).catch(() => {});
+  return c.html(addEventResultPage({ ok: true, message: confirmText, link: "https://github.com/MARYCOMPLEX/today/blob/main/data/events.json" }));
+});
 
 app.get("/dashboard", async (c) => {
   const user = await sessionUser(c.env, originOf(c.req.url), c.req.raw.headers);

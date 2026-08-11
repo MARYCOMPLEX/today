@@ -33,6 +33,8 @@ jobs:
           PUBLIC_ORIGIN=https://wx-clawbot-notify-webhook.goujy459.workers.dev
           ADMIN_EMAIL=admin@today.family
           ADMIN_PASSWORD=
+          GITHUB_REPO=MARYCOMPLEX/today
+          GITHUB_TOKEN=${{ secrets.EVENTS_GH_TOKEN }}
           EOF
 
       - name: 数据库迁移

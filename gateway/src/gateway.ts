@@ -1,4 +1,4 @@
-import { clientIdFromIdempotencyKey, openJson, randomClientId } from "./crypto";
+import { clientIdFromIdempotencyKey, openJson, randomClientId, randomToken, sha256Hex } from "./crypto";
 import { classifyIlinkSendFailure, getUpdates, sendImageMessage, sendTextMessage } from "./ilink";
 import { uploadImage, validateImage } from "./image";
 import { errorMessage, logEvent } from "./log";
@@ -203,12 +203,78 @@ export class Gateway {
       await this.env.DB.prepare("UPDATE wechat_binding SET cursor = ?, last_poll_at = ?, last_error = NULL WHERE user_id = ? AND generation = ?")
         .bind(response.get_updates_buf ?? row.cursor, now, row.user_id, row.generation).run();
     }
+    if (ownerMessage) {
+      await this.handleCommands(row, ownerMessage).catch((error) => {
+        logEvent("command_handle_failed", { userId: row.user_id, generation: row.generation, error: errorMessage(error) });
+      });
+    }
     logEvent("poll_ok", { userId: row.user_id, generation: row.generation, messageCount: response.msgs?.length ?? 0, contextUpdated: Boolean(ownerMessage) });
   }
 
+  private messageText(message: WeixinMessage): string {
+    return message.item_list?.find((item) => item.type === 1)?.text_item?.text?.trim() ?? "";
+  }
+
   private messageIsInit(message: WeixinMessage): boolean {
-    const text = message.item_list?.find((item) => item.type === 1)?.text_item?.text?.trim() ?? "";
+    const text = this.messageText(message);
     return text === "init" || text === "初始化" || text === "激活";
+  }
+
+  private async handleCommands(row: BindingWithSettings, message: WeixinMessage): Promise<void> {
+    const text = this.messageText(message).toLowerCase();
+    if (["添加日期", "新增日期", "add", "add-date", "adddate"].includes(text)) {
+      await this.handleAddDateCommand(row, message.context_token!);
+    } else if (["帮助", "help", "命令", "commands"].includes(text)) {
+      await this.sendHelpCommand(row, message.context_token!);
+    }
+  }
+
+  private async handleAddDateCommand(row: BindingWithSettings, contextToken: string): Promise<void> {
+    const token = randomToken("add_");
+    const tokenHash = await sha256Hex(token);
+    const now = Date.now();
+    await this.env.DB.prepare(
+      `INSERT INTO add_event_token (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)`
+    ).bind(crypto.randomUUID(), row.user_id, tokenHash, now + 15 * 60_000, now).run();
+    await this.env.DB.prepare("DELETE FROM add_event_token WHERE user_id = ? AND expires_at <= ?").bind(row.user_id, now).run();
+    const origin = this.env.PUBLIC_ORIGIN ?? "https://wx-clawbot-notify-webhook.goujy459.workers.dev";
+    const link = `${origin}/add-event?token=${encodeURIComponent(token)}`;
+    const { token: botToken } = await openJson<{ token: string }>(row.bot_token_ciphertext, this.env.MASTER_KEY, botAad(row));
+    const text = [
+      "📅 添加日期链接已生成（15 分钟内有效，一次性使用）：",
+      "",
+      link,
+      "",
+      "点开链接填写：名称、人物、农历/阳历、月、日，提交后自动写入日历。",
+    ].join("\n");
+    await sendTextMessage({
+      baseUrl: row.base_url,
+      token: botToken,
+      toUserId: row.owner_user_id,
+      contextToken,
+      clientId: randomClientId(),
+      text,
+    });
+    logEvent("add_date_link_sent", { userId: row.user_id });
+  }
+
+  private async sendHelpCommand(row: BindingWithSettings, contextToken: string): Promise<void> {
+    const { token } = await openJson<{ token: string }>(row.bot_token_ciphertext, this.env.MASTER_KEY, botAad(row));
+    const text = [
+      "🤖 可用命令：",
+      "init — 激活/确认绑定",
+      "添加日期 — 生成临时链接，在线添加家庭重要日子",
+      "帮助 — 显示本说明",
+    ].join("\n");
+    await sendTextMessage({
+      baseUrl: row.base_url,
+      token,
+      toUserId: row.owner_user_id,
+      contextToken,
+      clientId: randomClientId(),
+      text,
+    });
+    logEvent("help_command_sent", { userId: row.user_id });
   }
 
   private async sendActivationConfirmation(row: BindingWithSettings, contextToken: string): Promise<void> {

@@ -4,6 +4,9 @@ export interface Env {
   IMAGES: R2Bucket;
   BETTER_AUTH_SECRET: string;
   MASTER_KEY: string;
+  GITHUB_REPO?: string;
+  GITHUB_TOKEN?: string;
+  PUBLIC_ORIGIN?: string;
 }
 
 export type AccountStatus = "active" | "reauth_required";
