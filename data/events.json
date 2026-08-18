@@ -90,6 +90,16 @@
       "month": 8,
       "day": 12,
       "birth_year": 2000
+    },
+    {
+      "id": "95d2db7b-2871-4f83-b5fd-6d798b5f1e71",
+      "name": "七夕",
+      "person": "gb",
+      "calendar": "lunar",
+      "month": 7,
+      "day": 7,
+      "leap_policy": "leap_first",
+      "birth_year": 2021
     }
   ],
   "settings": {
