@@ -100,6 +100,15 @@
       "day": 7,
       "leap_policy": "leap_first",
       "birth_year": 2021
+    },
+    {
+      "id": "dea50a78-b954-4b82-933c-4aee2efd10a7",
+      "name": "周末红包",
+      "person": "gb",
+      "calendar": "solar",
+      "month": 8,
+      "day": 22,
+      "birth_year": 2026
     }
   ],
   "settings": {
