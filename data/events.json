@@ -109,6 +109,14 @@
       "month": 8,
       "day": 22,
       "birth_year": 2026
+    },
+    {
+      "id": "f531f488-78ee-4982-a133-49ae1dd4c83f",
+      "name": "开周会",
+      "person": "组员",
+      "calendar": "solar",
+      "month": 8,
+      "day": 21
     }
   ],
   "settings": {
