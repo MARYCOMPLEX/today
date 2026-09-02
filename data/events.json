@@ -117,6 +117,15 @@
       "calendar": "solar",
       "month": 8,
       "day": 21
+    },
+    {
+      "id": "c7c28cb7-5024-401a-9c0b-da374c0aed8e",
+      "name": "无固定收入认定",
+      "person": "我",
+      "calendar": "solar",
+      "month": 9,
+      "day": 3,
+      "birth_year": 2026
     }
   ],
   "settings": {
