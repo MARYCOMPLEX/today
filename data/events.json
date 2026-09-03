@@ -126,6 +126,15 @@
       "month": 9,
       "day": 3,
       "birth_year": 2026
+    },
+    {
+      "id": "d1d863b9-03b2-42a1-b2ce-b1cd78df4f28",
+      "name": "晚打卡",
+      "person": "我",
+      "calendar": "solar",
+      "month": 9,
+      "day": 6,
+      "birth_year": 2026
     }
   ],
   "settings": {
