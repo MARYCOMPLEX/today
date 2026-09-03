@@ -135,6 +135,15 @@
       "month": 9,
       "day": 6,
       "birth_year": 2026
+    },
+    {
+      "id": "3811764c-7ac4-4f86-bdf4-3061b1df4ca9",
+      "name": "调查没到账原因",
+      "person": "我",
+      "calendar": "solar",
+      "month": 9,
+      "day": 4,
+      "birth_year": 2026
     }
   ],
   "settings": {
