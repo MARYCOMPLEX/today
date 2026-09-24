@@ -152,6 +152,15 @@
       "calendar": "solar",
       "month": 9,
       "day": 5
+    },
+    {
+      "id": "4829856f-6027-4428-a761-a0ca5bd5c2bd",
+      "name": "写求职补贴",
+      "person": "我",
+      "calendar": "lunar",
+      "month": 9,
+      "day": 24,
+      "leap_policy": "leap_first"
     }
   ],
   "settings": {
