@@ -161,6 +161,14 @@
       "month": 9,
       "day": 24,
       "leap_policy": "leap_first"
+    },
+    {
+      "id": "80d85ae2-cb94-47b6-834a-c7f79eac93ae",
+      "name": "跟g吃猪脚饭",
+      "person": "gme",
+      "calendar": "solar",
+      "month": 10,
+      "day": 1
     }
   ],
   "settings": {
