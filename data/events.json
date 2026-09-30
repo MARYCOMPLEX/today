@@ -169,6 +169,14 @@
       "calendar": "solar",
       "month": 10,
       "day": 1
+    },
+    {
+      "id": "f5a12086-12ad-4061-80f1-4fc3e53a4530",
+      "name": "拿粥娃子衣服",
+      "person": "我",
+      "calendar": "solar",
+      "month": 10,
+      "day": 1
     }
   ],
   "settings": {
