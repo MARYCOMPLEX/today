@@ -185,6 +185,15 @@
       "calendar": "solar",
       "month": 10,
       "day": 4
+    },
+    {
+      "id": "4108f3e1-1dd5-46f4-a2a3-c23180b17f1a",
+      "name": "公司放钥匙",
+      "person": "我",
+      "calendar": "lunar",
+      "month": 10,
+      "day": 4,
+      "leap_policy": "leap_first"
     }
   ],
   "settings": {
