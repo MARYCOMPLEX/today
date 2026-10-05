@@ -194,6 +194,14 @@
       "month": 10,
       "day": 4,
       "leap_policy": "leap_first"
+    },
+    {
+      "id": "7eb89a6c-3085-4564-a338-6a161dad1cbd",
+      "name": "请假",
+      "person": "我",
+      "calendar": "solar",
+      "month": 10,
+      "day": 7
     }
   ],
   "settings": {
