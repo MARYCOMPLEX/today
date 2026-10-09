@@ -202,6 +202,15 @@
       "calendar": "solar",
       "month": 10,
       "day": 7
+    },
+    {
+      "id": "8c57070d-0965-432a-a959-0139392ade53",
+      "name": "笔试",
+      "person": "我",
+      "calendar": "lunar",
+      "month": 10,
+      "day": 10,
+      "leap_policy": "leap_first"
     }
   ],
   "settings": {
