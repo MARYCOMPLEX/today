@@ -211,6 +211,15 @@
       "month": 10,
       "day": 10,
       "leap_policy": "leap_first"
+    },
+    {
+      "id": "98d866a9-f1b3-492b-8709-e52af2f99996",
+      "name": "携程ai面",
+      "person": "我",
+      "calendar": "lunar",
+      "month": 10,
+      "day": 14,
+      "leap_policy": "leap_first"
     }
   ],
   "settings": {
